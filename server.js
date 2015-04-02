@@ -24,7 +24,7 @@ app.use(favicon(__dirname + '/favicon.png'));
 
 app.get('/about', function(req, res, next) {
     res.render('about', {
-        title: 'chat-anarchy' + req.path,
+        title: req.path,
         about: true
     });
 });
@@ -39,7 +39,7 @@ app.get('/join', function(req, res, next) {
 
 app.get('/*', function(req, res, next) {
     res.render('index', {
-        title: 'chat-anarchy' + req.path
+        title: req.path
     });
 });
 
