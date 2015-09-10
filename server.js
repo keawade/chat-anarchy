@@ -22,8 +22,8 @@ app.set('view engine', 'hbs');
 app.engine('html', hbs.__express);
 
 // Set the port and ip address
-app.set('port', process.env.PORT || 80);
-app.set('ip', process.env.IP || '0.0.0.0');
+app.set('port', process.env.PORT || 8000);
+app.set('ip', process.env.IP || '10.6.154.27');
 
 app.use(favicon(__dirname + '/favicon.png'));
 
@@ -102,7 +102,7 @@ io.on('connection', function(socket) {
         });
 });
 
-server.listen(process.env.PORT || 80, process.env.IP || "0.0.0.0", function(){
+server.listen(process.env.PORT || 8000, process.env.IP || "0.0.0.0", function(){
     var addr = server.address();
     console.log("[chat-anarchy] listening at ", addr.address + ":" + addr.port);
 });
