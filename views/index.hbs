@@ -5,6 +5,8 @@
         .on('connect', function() {
             socket.emit('join', location.pathname);
         })
+        .on('announce', log)
+        .on('inject', inject)
         .on('joined', function(user) {
             log(user + ' joined.');
         })
@@ -20,7 +22,17 @@
         socket.send(this.value);
         this.value = '';
     };
-    
+
+    // inject(html) written by @barberboy
+    function inject(html) {
+        var div = document.createElement('div');
+        div.innerHTML = html;
+        div.title = Date();
+        document.body.insertBefore(div, input);
+        div.scrollIntoView();
+    }
+
+    // log(message, user) written by @keawade
     function log(message, user) {
         if(user){
             var username = document.createElement('span');
@@ -32,7 +44,7 @@
             usermessage.appendChild(document.createTextNode(message));
             usermessage.style.fontWeight = "300";
             usermessage.title = Date();
-            
+
             var newline = document.createElement('p');
             newline.appendChild(document.createTextNode(''));
 
@@ -46,7 +58,7 @@
             status.title = Date();
             status.style.fontStyle = "italic";
             status.style.fontWeight = "300";
-            
+
             document.body.insertBefore(status, input);
             status.scrollIntoView();
         }

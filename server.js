@@ -2,7 +2,11 @@ var express = require('express'),
     http = require('http'),
     Moniker = require('moniker'),
     favicon = require('serve-favicon'),
-    hbs = require('hbs');
+    hbs = require('hbs'),
+    util = require('util'),
+    remix = require('webremix');
+
+var url =  /^https?\:\/\//;
 
 var names = Moniker.generator([Moniker.adjective, Moniker.noun], {
     glue: ' '
@@ -29,14 +33,6 @@ app.get('/about', function(req, res, next) {
     });
 });
 
-/*
-app.get('/join', function(req, res, next) {
-    res.render('join', {
-        title: 'chat-anarchy' + req.path
-    });
-});
-*/
-
 app.get('/*', function(req, res, next) {
     res.render('index', {
         title: req.path
@@ -44,6 +40,7 @@ app.get('/*', function(req, res, next) {
 });
 
 var io = require('socket.io')(server);
+
 io.on('connection', function(socket) {
     socket.user = names.choose();
     //console.log("%s connected.", socket.user);
@@ -51,18 +48,34 @@ io.on('connection', function(socket) {
         .on('join', function(room) {
             //console.log("%s joined %s", socket.user, room);
             socket.join(socket.room = room);
-            io.to(socket.room).emit('joined', socket.user);
+            socket.nsp.in(socket.room).emit('announce', util.format('  %s joined.', socket.user));
         })
         .on('message', function(message) {
             //console.log("%s: %s %s", socket.user, message, socket.room);
-            io.to(socket.room).emit('message', {
+            //io.to(socket.room).emit('message', {
+            socket.nsp.in(socket.room).emit('message', {
                 u: socket.user,
                 m: message
             });
         })
+        .on('message', function(message) {
+            if (!message) return;
+                message = message.trim();
+            if (url.test(message)) {
+                remix.generate(message, function(err, resp) {
+                    if (!err && resp) {
+                        //console.log("%s: %s %s", socket.user, message, socket.room);
+                        socket.nsp.to(socket.room).emit('inject', resp);
+                    }
+                });
+            }
+        })
         .on('disconnect', function() {
             //console.log("%s left %s", socket.user, socket.room);
-            io.to(socket.room).emit('left', socket.user);
+            //io.to(socket.room).emit('left', socket.user);
+            if (socket.room) {
+                socket.nsp.in(socket.room).emit('announce', util.format('  %s left.', socket.user));
+            }
         });
 });
 
