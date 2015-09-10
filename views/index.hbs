@@ -7,14 +7,11 @@
         })
         .on('announce', log)
         .on('inject', inject)
-        .on('joined', function(user) {
-            log(user + ' joined.');
-        })
         .on('message', function(data) {
             log(data.m, data.u);
         })
-        .on('left', function(user) {
-            log(user + ' left.');
+        .on('count', function(count) {
+            document.title = '(' + count + ') {{title}}';
         });
 
     var input = document.getElementsByTagName('input')[0];
@@ -23,7 +20,6 @@
         this.value = '';
     };
 
-    // inject(html) written by @barberboy
     function inject(html) {
         var div = document.createElement('div');
         div.innerHTML = html;
@@ -32,7 +28,6 @@
         div.scrollIntoView();
     }
 
-    // log(message, user) written by @keawade
     function log(message, user) {
         if(user){
             var username = document.createElement('span');

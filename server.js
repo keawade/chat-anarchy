@@ -4,6 +4,7 @@ var express = require('express'),
     favicon = require('serve-favicon'),
     hbs = require('hbs'),
     util = require('util'),
+    set = require('set'),
     remix = require('webremix');
 
 var url =  /^https?\:\/\//;
@@ -38,6 +39,7 @@ app.get('/*', function(req, res, next) {
         title: req.path
     });
 });
+var rooms = {};
 
 var io = require('socket.io')(server);
 
@@ -49,6 +51,14 @@ io.on('connection', function(socket) {
             //console.log("%s joined %s", socket.user, room);
             socket.join(socket.room = room);
             socket.nsp.in(socket.room).emit('announce', util.format('  %s joined.', socket.user));
+            if (room) {
+                var roster = rooms[room];
+                if (!roster) {
+                    roster = rooms[room] = new set();
+                }
+                roster.add(socket.user);
+                socket.nsp.in(socket.room).emit('count', roster.size());
+            }
         })
         .on('message', function(message) {
             //console.log("%s: %s %s", socket.user, message, socket.room);
@@ -57,8 +67,6 @@ io.on('connection', function(socket) {
                 u: socket.user,
                 m: message
             });
-        })
-        .on('message', function(message) {
             if (!message) return;
                 message = message.trim();
             if (url.test(message)) {
@@ -69,12 +77,27 @@ io.on('connection', function(socket) {
                     }
                 });
             }
+            if (!message || !socket.room || !rooms[socket.room]) return;
+
+            message = message.trim().toLowerCase();
+            if (message === "who" || message === "who?" || message === "who's here?" || message === "who is here?" || message === "ls") {
+                var roster = rooms[socket.room];
+                socket.nsp.in(socket.room).emit('announce',
+                    util.format("%s are present.", roster.get().join(', ')));
+            }
         })
         .on('disconnect', function() {
             //console.log("%s left %s", socket.user, socket.room);
             //io.to(socket.room).emit('left', socket.user);
             if (socket.room) {
                 socket.nsp.in(socket.room).emit('announce', util.format('  %s left.', socket.user));
+            }
+            if (socket.room) {
+                var roster = rooms[socket.room];
+                if (roster) {
+                    roster.remove(socket.user);
+                    socket.nsp.in(socket.room).emit('count', roster.size());
+                }
             }
         });
 });
