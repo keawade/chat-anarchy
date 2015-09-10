@@ -102,7 +102,7 @@ io.on('connection', function(socket) {
         });
 });
 
-server.listen(process.env.PORT || 8000, process.env.IP || "0.0.0.0", function(){
+server.listen(process.env.PORT || 80, process.env.IP || "0.0.0.0", function(){
     var addr = server.address();
     console.log("[chat-anarchy] listening at ", addr.address + ":" + addr.port);
 });
